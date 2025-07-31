@@ -15,7 +15,7 @@ using namespace std::chrono_literals;
 
 class OffboardControl : public rclcpp::Node {
 public:
-    OffboardControl() : Node("offboard_control_mavros") {
+    OffboardControl() : Node("mission_control_mavros") {
 
         client1_ = this->create_client<mavros_msgs::srv::SetMode>("/mavros/set_mode");
         arming_client_ = this->create_client<mavros_msgs::srv::CommandBool>("/mavros/cmd/arming");
