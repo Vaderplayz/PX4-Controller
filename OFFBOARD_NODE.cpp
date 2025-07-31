@@ -22,7 +22,10 @@ public:
    RCLCPP_INFO(this->get_logger(), "Node initialized. Waiting for MAVROS connection...");
            // Start timer for periodic setpoint publishing
     timer_ = this->create_wall_timer(100ms, std::bind(&OffboardControl::publish_takeoff_setpoint, this));
-    std::this_thread::sleep_for(std::chrono::seconds(3));    setOffboard();
+    std::this_thread::sleep_for(std::chrono::seconds(3));   
+    setAUTO();
+    std::this_thread::sleep_for(std::chrono::seconds(1)); 
+    setOffboard();
     arm();
         
 
@@ -37,6 +40,7 @@ private:
     void arm();
     void setOffboard();
     void publish_takeoff_setpoint();
+    void setAUTO();
 
 }; 
 
@@ -74,6 +78,23 @@ void OffboardControl::setOffboard(){
                 RCLCPP_INFO(this->get_logger(), "Drone set OFFBOARD successfully!");
         }   else {
             RCLCPP_ERROR(this->get_logger(), "Failed to set mode.");}}}
+
+void OffboardControl::setAUTO(){
+        auto request1 = std::make_shared<mavros_msgs::srv::SetMode::Request>();
+        request1->base_mode = 92 ;
+        auto future_result1 = client1_->async_send_request(request1);
+        while (!client1_->wait_for_service(1s) && rclcpp::ok()) {
+    RCLCPP_INFO(this->get_logger(), "Waiting for /mavros/set_mode service...");
+}
+
+    // 6. Spin the Node until the future is complete. This is the key step.
+        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_result1) == rclcpp::FutureReturnCode::SUCCESS)
+        {
+            if (future_result1.get()->mode_sent) {
+                RCLCPP_INFO(this->get_logger(), "Drone set OFFBOARD successfully!");
+        }   else {
+            RCLCPP_ERROR(this->get_logger(), "Failed to set mode.");}}}
+
 
 void OffboardControl::publish_takeoff_setpoint() {
         auto setpoint_msg = mavros_msgs::msg::PositionTarget();
